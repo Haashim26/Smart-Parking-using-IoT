@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Parking Map</title>
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    body {
+      font-family: Arial, sans-serif;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-database-compat.js"></script>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <h2>Smart Parking Map</h2>
+  <div id="map"></div>
+
+  <script>
+    // ✅ Paste your NEW firebaseConfig here
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmno8zgmzfCwLktHb3YRGvfrSbTuJISuM",
+      authDomain: "iot-smrt-parking.firebaseapp.com",
+      databaseURL: "https://iot-smrt-parking-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "iot-smrt-parking",
+      storageBucket: "iot-smrt-parking.appspot.com",   // ✅ fixed here
+      messagingSenderId: "661137883511",
+      appId: "1:661137883511:web:c628b9f3f2dc9a605aa172"
+    };
+
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Initialize Leaflet map
+    const map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
+
+    // ✅ Read from 'parking_areas'
+    const parkingRef = database.ref('parking_areas');
+
+    parkingRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      console.log('Firebase data:', data);
+
+      if (!data) {
+        console.log('No data found!');
+        return;
+      }
+
+      // Clear existing markers
+      markers.forEach(marker => map.removeLayer(marker));
+      markers = [];
+
+      for (const key in data) {
+        if (data.hasOwnProperty(key)) {
+          const area = data[key];
+          console.log('Processing area:', area);
+
+          const lat = parseFloat(area.lat);
+          const lng = parseFloat(area.lng);
+
+          if (isNaN(lat) || isNaN(lng)) {
+            console.warn('Invalid lat/lng for area:', key);
+            continue;
+          }
+
+          // ✅ Choose marker color based on free slots
+          const iconColor = area.free > 0 ? 'green' : 'red';
+          const markerIcon = L.icon({
+            iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+          });
+
+          const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
+
+          const popupContent = `
+            <b>${area.name}</b><br>
+            Total Slots: ${area.total_slots}<br>
+            Occupied: ${area.occupied}<br>
+            Free: ${area.free}<br>
+            Last Updated: ${area.last_updated}
+          `;
+
+          marker.bindPopup(popupContent);
+          markers.push(marker);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
