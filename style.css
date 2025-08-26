@@ -1,0 +1,45 @@
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f4f7fa;
+  color: #333;
+}
+
+/* Heading */
+h2 {
+  text-align: center;
+  margin: 20px 0;
+  font-weight: 600;
+  font-size: 26px;
+  color: #1e293b;
+  letter-spacing: 1px;
+}
+
+/* Map */
+#map {
+  height: 550px;
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 15px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out;
+}
+
+#map:hover {
+  transform: scale(1.01);
+}
+
+/* Popup Styling */
+.leaflet-popup-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-content b {
+  color: #1e293b;
+  font-size: 15px;
+}
