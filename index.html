@@ -2,17 +2,10 @@
 <html>
 <head>
   <title>Smart Parking Map</title>
+
+  <!-- Link to external CSS -->
   <link rel="stylesheet" href="style.css">
-  <style>
-    #map {
-      height: 500px;
-      width: 100%;
-    }
-    body {
-      font-family: Arial, sans-serif;
-    }
-  
-  </style>
+
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-database-compat.js"></script>
@@ -28,17 +21,15 @@
   <div id="map"></div>
 
   <script>
-    // ✅ Paste your NEW firebaseConfig here
     const firebaseConfig = {
       apiKey: "AIzaSyAmno8zgmzfCwLktHb3YRGvfrSbTuJISuM",
       authDomain: "iot-smrt-parking.firebaseapp.com",
       databaseURL: "https://iot-smrt-parking-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "iot-smrt-parking",
-      storageBucket: "iot-smrt-parking.appspot.com",   // ✅ fixed here
+      storageBucket: "iot-smrt-parking.appspot.com",
       messagingSenderId: "661137883511",
       appId: "1:661137883511:web:c628b9f3f2dc9a605aa172"
     };
-
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -110,4 +101,5 @@
   </script>
 </body>
 </html>
+
 
