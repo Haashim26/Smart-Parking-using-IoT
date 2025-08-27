@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Parking Map</title>
 
-  <!-- Link to external CSS -->
+  <!-- Link external CSS -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Firebase SDKs -->
@@ -17,10 +19,21 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-  <h2>Smart Parking Map</h2>
+
+  <!-- Navbar -->
+  <div class="navbar">🚗 Smart Parking Map through ParkSense</div>
+
+  <!-- Page Heading -->
+  <h2>Parking Areas Overview</h2>
+
+  <!-- Map -->
   <div id="map"></div>
 
+  <!-- Footer -->
+  <footer>&copy; 2025 Smart Parking System | Designed with ❤️</footer>
+
   <script>
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAmno8zgmzfCwLktHb3YRGvfrSbTuJISuM",
       authDomain: "iot-smrt-parking.firebaseapp.com",
@@ -45,17 +58,13 @@
 
     let markers = [];
 
-    // ✅ Read from 'parking_areas'
+    // Read from 'parking_areas'
     const parkingRef = database.ref('parking_areas');
 
     parkingRef.on('value', (snapshot) => {
       const data = snapshot.val();
-      console.log('Firebase data:', data);
 
-      if (!data) {
-        console.log('No data found!');
-        return;
-      }
+      if (!data) return;
 
       // Clear existing markers
       markers.forEach(marker => map.removeLayer(marker));
@@ -64,17 +73,13 @@
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
           const area = data[key];
-          console.log('Processing area:', area);
 
           const lat = parseFloat(area.lat);
           const lng = parseFloat(area.lng);
 
-          if (isNaN(lat) || isNaN(lng)) {
-            console.warn('Invalid lat/lng for area:', key);
-            continue;
-          }
+          if (isNaN(lat) || isNaN(lng)) continue;
 
-          // ✅ Choose marker color based on free slots
+          // Marker color based on free slots
           const iconColor = area.free > 0 ? 'green' : 'red';
           const markerIcon = L.icon({
             iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
@@ -90,7 +95,7 @@
             Total Slots: ${area.total_slots}<br>
             Occupied: ${area.occupied}<br>
             Free: ${area.free}<br>
-            Last Updated: ${area.last_updated}
+            <small>Last Updated: ${area.last_updated}</small>
           `;
 
           marker.bindPopup(popupContent);
@@ -101,5 +106,3 @@
   </script>
 </body>
 </html>
-
-
