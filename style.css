@@ -4,8 +4,19 @@
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background: yellow;
+  background: #f4f7fa;
   color: #333;
+}
+
+/* Navbar */
+.navbar {
+  background: #1e293b;
+  color: #fff;
+  padding: 15px 25px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 /* Heading */
@@ -18,7 +29,7 @@ h2 {
   letter-spacing: 1px;
 }
 
-/* Map */
+/* Map container */
 #map {
   height: 550px;
   width: 90%;
@@ -33,7 +44,7 @@ h2 {
   transform: scale(1.01);
 }
 
-/* Popup Styling */
+/* Leaflet popup styling */
 .leaflet-popup-content {
   font-size: 14px;
   line-height: 1.5;
@@ -44,3 +55,12 @@ h2 {
   font-size: 15px;
 }
 
+/* Footer */
+footer {
+  text-align: center;
+  padding: 15px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 14px;
+  margin-top: 30px;
+}
