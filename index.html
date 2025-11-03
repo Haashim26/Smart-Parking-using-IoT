@@ -52,7 +52,7 @@
     let markers = [];
 
     // ✅ Fetch Data from Firebase
-    const ref = database.ref("parkingAreas");
+    const ref = database.ref("name/parkingAreas");
     ref.on("value", (snapshot) => {
       const data = snapshot.val();
       if (!data) {
