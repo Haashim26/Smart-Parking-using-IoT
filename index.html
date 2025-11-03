@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PARKSENSE - Smart Parking Map</title>
 
-  <!-- External CSS -->
+  <!-- Link external CSS -->
   <link rel="stylesheet" href="style.css" />
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-database-compat.js"></script>
 
-  <!-- Leaflet -->
+  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
@@ -24,7 +24,7 @@
   <!-- Page Heading -->
   <h2>Parking Areas Overview</h2>
 
-  <!-- Map -->
+  <!-- Map Container -->
   <div id="map"></div>
 
   <!-- Footer -->
@@ -41,77 +41,73 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // ✅ Initialize Leaflet Map (centered on Tamil Nadu)
-    const map = L.map("map").setView([11.0, 78.7], 7);
+    // ✅ Initialize Leaflet Map (Zoomed on Tamil Nadu)
+    const map = L.map("map").setView([11.2, 78.8], 7);
 
-    // Add OpenStreetMap tiles
+    // Add OpenStreetMap Tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
+      attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
     let markers = [];
 
-    // ✅ Firebase Data Reference
-    const parkingRef = database.ref("parkingAreas");
-
-    parkingRef.on("value", (snapshot) => {
+    // ✅ Fetch Data from Firebase
+    const ref = database.ref("parkingAreas");
+    ref.on("value", (snapshot) => {
       const data = snapshot.val();
-      if (!data) return;
+      if (!data) {
+        console.warn("No data found in Firebase!");
+        return;
+      }
 
-      // Clear old markers
-      markers.forEach((marker) => map.removeLayer(marker));
+      // Clear previous markers
+      markers.forEach(marker => map.removeLayer(marker));
       markers = [];
 
-      // Loop through areas
-      for (const areaKey in data) {
+      // Loop through each parking area
+      Object.keys(data).forEach(areaKey => {
         const area = data[areaKey];
-        if (!area) continue;
+        if (!area.lat || !area.lng) return;
 
         const lat = parseFloat(area.lat);
         const lng = parseFloat(area.lng);
-        if (isNaN(lat) || isNaN(lng)) continue;
 
-        const totalSlots = area.total_slots || 0;
-        const occupied = area.occupied || 0;
-        const free = area.free || 0;
-
-        // Marker color based on free slots
-        let iconColor = "green";
-        if (free === 0) iconColor = "red";
-        else if (free < totalSlots / 2) iconColor = "orange";
-
-        const markerIcon = L.icon({
-          iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          popupAnchor: [0, -32],
-        });
-
-        // Build slot list for popup
-        let slotList = "";
-        if (area.slots) {
-          for (const s in area.slots) {
-            const status = area.slots[s];
-            const color = status === "free" ? "green" : "red";
-            slotList += `${s}: <b style="color:${color};">${status}</b><br>`;
-          }
+        if (isNaN(lat) || isNaN(lng)) {
+          console.error(`Invalid coordinates for ${areaKey}`);
+          return;
         }
 
-        const popupContent = `
+        // Icon color logic
+        let color = "green";
+        if (area.free === 0) color = "red";
+        else if (area.free < area.total_slots / 2) color = "orange";
+
+        const icon = L.icon({
+          iconUrl: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32]
+        });
+
+        // Generate popup info
+        const popup = `
           <b>${area.name || areaKey}</b><br>
-          <hr style="margin:4px 0;">
-          Total Slots: ${totalSlots}<br>
-          Occupied: ${occupied}<br>
-          Free: ${free}<br><br>
-          ${slotList}
+          <b>📍 Location:</b> ${lat.toFixed(4)}, ${lng.toFixed(4)}<br>
+          <b>Total Slots:</b> ${area.total_slots}<br>
+          <b>Occupied:</b> ${area.occupied}<br>
+          <b>Free:</b> ${area.free}<br><br>
+          ${Object.entries(area.slots || {}).map(([slot, status]) =>
+            `${slot}: <b>${status}</b>`).join("<br>")}
         `;
 
-        const marker = L.marker([lat, lng], { icon: markerIcon })
-          .bindPopup(popupContent)
-          .addTo(map);
-
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
+        marker.bindPopup(popup);
         markers.push(marker);
-      }
+      });
+
+      // ✅ Automatically fit map to show all markers
+      const group = new L.featureGroup(markers);
+      map.fitBounds(group.getBounds(), { padding: [50, 50] });
     });
   </script>
 </body>
