@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Parking Map</title>
 
-  <!-- Link external CSS -->
+  <!-- Link CSS -->
   <link rel="stylesheet" href="style.css">
 
   <!-- Firebase SDKs -->
@@ -33,15 +33,9 @@
   <footer>&copy; 2025 Smart Parking System</footer>
 
   <script>
-    // Firebase configuration
+    // ✅ Firebase config for your new project (replace if needed)
     const firebaseConfig = {
-      apiKey: "AIzaSyAVJI5MUqaOqVNqA_X8sz1XGwJD3eYOpcs",
-      authDomain: "iot-smrt-parking.firebaseapp.com",
-      databaseURL: "https://iot-smrt-parking-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "iot-smrt-parking",
-      storageBucket: "iot-smrt-parking.appspot.com",
-      messagingSenderId: "661137883511",
-      appId: "1:661137883511:web:c628b9f3f2dc9a605aa172"
+      databaseURL: "https://parksense-3c095-default-rtdb.asia-southeast1.firebasedatabase.app/"
     };
 
     // Initialize Firebase
@@ -49,7 +43,7 @@
     const database = firebase.database();
 
     // Initialize Leaflet map
-    const map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+    const map = L.map('map').setView([20.5937, 78.9629], 5); // India center
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -58,49 +52,58 @@
 
     let markers = [];
 
-    // Read from 'parking_areas'
-    const parkingRef = database.ref('parking_areas');
+    // ✅ Read from 'parkingAreas' (new structure)
+    const parkingRef = database.ref('parkingAreas');
 
     parkingRef.on('value', (snapshot) => {
       const data = snapshot.val();
-
       if (!data) return;
 
-      // Clear existing markers
+      // Clear old markers
       markers.forEach(marker => map.removeLayer(marker));
       markers = [];
 
-      for (const key in data) {
-        if (data.hasOwnProperty(key)) {
-          const area = data[key];
+      for (const areaKey in data) {
+        const area = data[areaKey];
+        if (!area) continue;
 
-          const lat = parseFloat(area.lat);
-          const lng = parseFloat(area.lng);
+        // Extract coordinates
+        const lat = parseFloat(area.lat || 0);
+        const lng = parseFloat(area.lng || 0);
+        if (isNaN(lat) || isNaN(lng)) continue;
 
-          if (isNaN(lat) || isNaN(lng)) continue;
-
-          // Marker color based on free slots
-          const iconColor = area.free > 0 ? 'green' : 'red';
-          const markerIcon = L.icon({
-            iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32]
-          });
-
-          const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
-
-          const popupContent = `
-            <b>${area.name}</b><br>
-            Total Slots: ${area.total_slots}<br>
-            Occupied: ${area.occupied}<br>
-            Free: ${area.free}<br>
-            <small>Last Updated: ${area.last_updated}</small>
-          `;
-
-          marker.bindPopup(popupContent);
-          markers.push(marker);
+        // Calculate slot stats dynamically if not stored
+        const slots = {};
+        for (const k in area) {
+          if (k.startsWith('slot')) slots[k] = area[k];
         }
+        const totalSlots = Object.keys(slots).length || area.total_slots || 5;
+        const occupied = Object.values(slots).filter(v => v === "occupied").length;
+        const free = totalSlots - occupied;
+
+        // Marker color
+        let iconColor = "green";
+        if (free === 0) iconColor = "red";
+        else if (free < totalSlots / 2) iconColor = "orange";
+
+        const markerIcon = L.icon({
+          iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32]
+        });
+
+        // Create marker
+        const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
+        const popupContent = `
+          <b>${area.name || areaKey.toUpperCase()}</b><br>
+          Total Slots: ${totalSlots}<br>
+          Occupied: ${occupied}<br>
+          Free: ${free}<br>
+          <small>Last Updated: ${area.last_updated || '---'}</small>
+        `;
+        marker.bindPopup(popupContent);
+        markers.push(marker);
       }
     });
   </script>
