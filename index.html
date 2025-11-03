@@ -32,7 +32,7 @@
 
   <!-- JavaScript -->
   <script>
-    // ✅ Firebase Config
+    // ✅ Firebase Configuration
     const firebaseConfig = {
       databaseURL: "https://parksense-3c095-default-rtdb.asia-southeast1.firebasedatabase.app/"
     };
@@ -41,39 +41,41 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Initialize Leaflet Map (centered on Tamil Nadu)
-    const map = L.map('map').setView([11.0, 78.5], 7);
+    // ✅ Initialize Leaflet Map (centered on Tamil Nadu)
+    const map = L.map("map").setView([11.0, 78.7], 7);
 
     // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
     let markers = [];
 
-    // Fetch parking area data from Firebase
-    const parkingRef = database.ref('parkingAreas');
-    parkingRef.on('value', (snapshot) => {
+    // ✅ Firebase Data Reference
+    const parkingRef = database.ref("parkingAreas");
+
+    parkingRef.on("value", (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
 
       // Clear old markers
-      markers.forEach(marker => map.removeLayer(marker));
+      markers.forEach((marker) => map.removeLayer(marker));
       markers = [];
 
+      // Loop through areas
       for (const areaKey in data) {
         const area = data[areaKey];
         if (!area) continue;
 
-        const lat = Number(area.lat);
-        const lng = Number(area.lng);
+        const lat = parseFloat(area.lat);
+        const lng = parseFloat(area.lng);
         if (isNaN(lat) || isNaN(lng)) continue;
 
         const totalSlots = area.total_slots || 0;
         const occupied = area.occupied || 0;
         const free = area.free || 0;
 
-        // Color logic for icon
+        // Marker color based on free slots
         let iconColor = "green";
         if (free === 0) iconColor = "red";
         else if (free < totalSlots / 2) iconColor = "orange";
@@ -82,20 +84,22 @@
           iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
-          popupAnchor: [0, -32]
+          popupAnchor: [0, -32],
         });
 
-        // Slot list display
+        // Build slot list for popup
         let slotList = "";
         if (area.slots) {
           for (const s in area.slots) {
             const status = area.slots[s];
-            slotList += `${s}: <b>${status}</b><br>`;
+            const color = status === "free" ? "green" : "red";
+            slotList += `${s}: <b style="color:${color};">${status}</b><br>`;
           }
         }
 
         const popupContent = `
           <b>${area.name || areaKey}</b><br>
+          <hr style="margin:4px 0;">
           Total Slots: ${totalSlots}<br>
           Occupied: ${occupied}<br>
           Free: ${free}<br><br>
